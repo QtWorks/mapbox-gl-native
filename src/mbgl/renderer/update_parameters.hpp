@@ -33,6 +33,9 @@ public:
     Scheduler& scheduler;
     FileSource& fileSource;
     AnnotationManager& annotationManager;
+
+    const optional<uint8_t> fixedPrefetchZoom = {};
+    const optional<uint8_t> dynamicPrefetchZoomDelta = {};
 };
 
 } // namespace mbgl

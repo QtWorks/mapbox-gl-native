@@ -22,6 +22,8 @@ public:
     AnnotationManager& annotationManager;
     ImageManager& imageManager;
     GlyphManager& glyphManager;
+    const optional<uint8_t> fixedPrefetchZoom = {};
+    const optional<uint8_t> dynamicPrefetchZoomDelta = {};
 };
 
 } // namespace mbgl

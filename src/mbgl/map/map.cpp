@@ -93,6 +93,9 @@ public:
 
     bool cameraMutated = false;
 
+    optional<uint8_t> fixedPrefetchZoom;
+    optional<uint8_t> dynamicPrefetchZoomDelta;
+
     size_t sourceCacheSize;
     bool loading = false;
 
@@ -245,7 +248,9 @@ void Map::Impl::render(View& view) {
         style->impl->getLayerImpls(),
         scheduler,
         fileSource,
-        annotationManager
+        annotationManager,
+        fixedPrefetchZoom,
+        dynamicPrefetchZoomDelta
     });
 
     bool loaded = style->impl->isLoaded() && renderStyle->isLoaded();
@@ -830,6 +835,22 @@ void Map::setSourceTileCacheSize(size_t size) {
         impl->renderStyle->setSourceTileCacheSize(size);
         impl->backend.invalidate();
     }
+}
+
+void Map::setFixedPrefetchZoom(optional<uint8_t> zoom) {
+    impl->fixedPrefetchZoom = zoom;
+}
+
+optional<uint8_t> Map::getFixedPrefetchZoom() const {
+    return impl->fixedPrefetchZoom;
+}
+
+void Map::setDynamicPrefetchZoomDelta(optional<uint8_t> delta) {
+    impl->dynamicPrefetchZoomDelta = delta;
+}
+
+optional<uint8_t> Map::getDynamicPrefetchZoomDelta() const {
+    return impl->dynamicPrefetchZoomDelta;
 }
 
 void Map::onLowMemory() {
