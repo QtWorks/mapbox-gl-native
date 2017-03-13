@@ -41,13 +41,26 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
 {
     if (CGSizeEqualToSize(self.frame.size, CGSizeZero))
     {
-        CGFloat frameSize = (self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithCourse) ? MGLUserLocationAnnotationPuckSize : MGLUserLocationAnnotationDotSize;
+        CGFloat frameSize = MGLUserLocationAnnotationDotSize;
+#if !TARGET_OS_TV
+        if (self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithCourse) {
+            frameSize = MGLUserLocationAnnotationPuckSize;
+        }
+#endif
         [self updateFrameWithSize:frameSize];
     }
 
     if (CLLocationCoordinate2DIsValid(self.userLocation.coordinate))
     {
-        (self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithCourse) ? [self drawPuck] : [self drawDot];
+#if TARGET_OS_TV
+        [self drawDot];
+#else
+        if (self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithCourse) {
+            [self drawPuck];
+        } else {
+            [self drawDot];
+        }
+#endif
         [self updatePitch];
     }
 
@@ -185,10 +198,12 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
 
         [self.layer addSublayer:_puckArrow];
     }
+#if !TARGET_OS_TV
     if (self.userLocation.location.course >= 0)
     {
         _puckArrow.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, -MGLRadiansFromDegrees(self.mapView.direction - self.userLocation.location.course));
     }
+#endif
 
     if ( ! _puckModeActivated)
     {
@@ -225,6 +240,7 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
         [self updateFrameWithSize:MGLUserLocationAnnotationDotSize];
     }
 
+#if !TARGET_OS_TV
     BOOL showHeadingIndicator = self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
 
     // update heading indicator
@@ -287,6 +303,7 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
         _headingIndicatorLayer = nil;
         _headingIndicatorMaskLayer = nil;
     }
+#endif
 
 
     // update accuracy ring (if zoom or horizontal accuracy have changed)
@@ -503,6 +520,7 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
     return image;
 }
 
+#if !TARGET_OS_TV
 - (UIBezierPath *)headingIndicatorClippingMask
 {
     CGFloat accuracy = self.userLocation.heading.headingAccuracy;
@@ -527,5 +545,6 @@ const CGFloat MGLUserLocationAnnotationArrowSize = MGLUserLocationAnnotationPuck
 
     return ovalPath;
 }
+#endif
 
 @end

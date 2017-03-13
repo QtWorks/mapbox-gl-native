@@ -4,6 +4,8 @@ mason_use(icu VERSION 58.1-min-size)
 
 macro(mbgl_platform_core)
     set_xcode_property(mbgl-core IPHONEOS_DEPLOYMENT_TARGET "8.0")
+    set_xcode_property(mbgl-core TVOS_DEPLOYMENT_TARGET "10.0")
+    set_xcode_property(mbgl-core SUPPORTED_PLATFORMS "iphonesimulator iphoneos appletvsimulator appletvos")
     set_xcode_property(mbgl-core ENABLE_BITCODE "YES")
     set_xcode_property(mbgl-core BITCODE_GENERATION_MODE bitcode)
     set_xcode_property(mbgl-core ONLY_ACTIVE_ARCH $<$<CONFIG:Debug>:YES>)

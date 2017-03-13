@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  This property is `nil` if the user location tracking mode is not
  `MGLUserTrackingModeFollowWithHeading`.
  */
-@property (nonatomic, readonly, nullable) CLHeading *heading;
+@property (nonatomic, readonly, nullable) CLHeading *heading __TVOS_PROHIBITED;
 
 #pragma mark Accessing the User Annotation Text
 

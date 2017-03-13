@@ -47,7 +47,7 @@
     XCTAssertEqualObjects(infos[3].URL, [NSURL URLWithString:@"https://www.mapbox.com/map-feedback/"]);
     XCTAssertTrue(infos[3].feedbackLink);
     NSURL *styleURL = [MGLStyle satelliteStreetsStyleURLWithVersion:99];
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IOS
     XCTAssertEqualObjects([infos[3] feedbackURLAtCenterCoordinate:mapbox zoomLevel:14],
                           [NSURL URLWithString:@"https://www.mapbox.com/feedback/?referrer=com.mapbox.sdk.ios#/77.63680/12.98108/14.00/0.0/0"]);
     XCTAssertEqualObjects([infos[3] feedbackURLForStyleURL:styleURL atCenterCoordinate:mapbox zoomLevel:3.14159 direction:90.9 pitch:12.5],
