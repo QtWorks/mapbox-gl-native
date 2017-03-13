@@ -695,6 +695,14 @@
 		DAE907651E7697B400E58785 /* MGLShapeSourceTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 40CFA6501D787579008103BD /* MGLShapeSourceTests.mm */; };
 		DAE907661E7697B400E58785 /* MGLSourceQueryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 920A3E5C1E6F995200C16EFC /* MGLSourceQueryTests.m */; };
 		DAE907671E7697B400E58785 /* MGLTileSetTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4085AF081D933DEA00F11B22 /* MGLTileSetTests.mm */; };
+		DAE907691E76AD4600E58785 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE907681E76AD4600E58785 /* SystemConfiguration.framework */; };
+		DAE907721E76AF3400E58785 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DAE907711E76AF3400E58785 /* main.m */; };
+		DAE907751E76AF3400E58785 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DAE907741E76AF3400E58785 /* AppDelegate.m */; };
+		DAE907781E76AF3400E58785 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DAE907771E76AF3400E58785 /* ViewController.m */; };
+		DAE9077B1E76AF3400E58785 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DAE907791E76AF3400E58785 /* Main.storyboard */; };
+		DAE9077D1E76AF3400E58785 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAE9077C1E76AF3400E58785 /* Assets.xcassets */; };
+		DAE907901E76AFF200E58785 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA94B9711E766E6400190EF5 /* Mapbox.framework */; };
+		DAE907911E76AFF200E58785 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DA94B9711E766E6400190EF5 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DAED38631D62D0FC00D7640F /* NSURL+MGLAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = DAED38611D62D0FC00D7640F /* NSURL+MGLAdditions.h */; };
 		DAED38641D62D0FC00D7640F /* NSURL+MGLAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = DAED38611D62D0FC00D7640F /* NSURL+MGLAdditions.h */; };
 		DAED38651D62D0FC00D7640F /* NSURL+MGLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = DAED38621D62D0FC00D7640F /* NSURL+MGLAdditions.m */; };
@@ -774,6 +782,13 @@
 			remoteGlobalIDString = DA8847D11CBAF91600AB86E3;
 			remoteInfo = framework;
 		};
+		DAE907921E76AFF200E58785 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DA1DC9421CB6C1C2006E619F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA94B9701E766E6400190EF5;
+			remoteInfo = tv;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -806,6 +821,17 @@
 			dstSubfolderSpec = 16;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DAE907941E76AFF200E58785 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DAE907911E76AFF200E58785 /* Mapbox.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1195,6 +1221,16 @@
 		DAE9077C1E76AF3400E58785 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DAE9077E1E76AF3400E58785 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DAE9E0F11EB7BF1B001E8E8B /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Foundation.strings; sourceTree = "<group>"; };
+		DAE907681E76AD4600E58785 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS10.1.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		DAE9076E1E76AF3400E58785 /* Mapbox GL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mapbox GL.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DAE907711E76AF3400E58785 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		DAE907731E76AF3400E58785 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		DAE907741E76AF3400E58785 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		DAE907761E76AF3400E58785 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		DAE907771E76AF3400E58785 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		DAE9077A1E76AF3400E58785 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		DAE9077C1E76AF3400E58785 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DAE9077E1E76AF3400E58785 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DAED38611D62D0FC00D7640F /* NSURL+MGLAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+MGLAdditions.h"; sourceTree = "<group>"; };
 		DAED38621D62D0FC00D7640F /* NSURL+MGLAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+MGLAdditions.m"; sourceTree = "<group>"; };
 		DAEDC4331D603417000224FF /* MGLAttributionInfoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MGLAttributionInfoTests.m; path = ../../darwin/test/MGLAttributionInfoTests.m; sourceTree = "<group>"; };
@@ -1253,6 +1289,7 @@
 				DA94BA641E7675D100190EF5 /* GLKit.framework in Frameworks */,
 				DA94BA661E7675DB00190EF5 /* ImageIO.framework in Frameworks */,
 				DA94BA681E7675E500190EF5 /* MobileCoreServices.framework in Frameworks */,
+				DAE907691E76AD4600E58785 /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1278,6 +1315,14 @@
 			files = (
 				DAA4E4081CBB6C9500178DFB /* Mapbox.framework in Frameworks */,
 				5549A03A1EF2877500073113 /* OpenGLES.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DAE9076B1E76AF3400E58785 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAE907901E76AFF200E58785 /* Mapbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1458,8 +1503,9 @@
 			isa = PBXGroup;
 			children = (
 				402E9DE21CD3A56500FD4519 /* Playground */,
-				DA1DC94C1CB6C1C2006E619F /* Demo App */,
-				DABCABA91CB80692000A7C39 /* Benchmarking App */,
+				DA1DC94C1CB6C1C2006E619F /* iOS Demo App */,
+				DABCABA91CB80692000A7C39 /* iOS Benchmarking App */,
+				DAE9076F1E76AF3400E58785 /* tvOS App */,
 				DA8847D31CBAF91600AB86E3 /* SDK */,
 				DA2E88521CC036F400F24E7B /* SDK Tests */,
 				DA1DC9921CB6DF24006E619F /* Frameworks */,
@@ -1480,11 +1526,12 @@
 				DA25D5B91CCD9EDE00607828 /* Settings.bundle */,
 				DA94B9711E766E6400190EF5 /* Mapbox.framework */,
 				DA94B9791E766E6400190EF5 /* tvtest.xctest */,
+				DAE9076E1E76AF3400E58785 /* Mapbox GL.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DA1DC94C1CB6C1C2006E619F /* Demo App */ = {
+		DA1DC94C1CB6C1C2006E619F /* iOS Demo App */ = {
 			isa = PBXGroup;
 			children = (
 				DA1DC9501CB6C1C2006E619F /* MBXAppDelegate.h */,
@@ -1516,7 +1563,7 @@
 				96E027251E57C76E004B8E66 /* Localizable.strings */,
 				DA1DC94D1CB6C1C2006E619F /* Supporting Files */,
 			);
-			name = "Demo App";
+			name = "iOS Demo App";
 			path = app;
 			sourceTree = "<group>";
 		};
@@ -1531,6 +1578,7 @@
 		DA1DC9921CB6DF24006E619F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DAE907681E76AD4600E58785 /* SystemConfiguration.framework */,
 				DA94BA671E7675E500190EF5 /* MobileCoreServices.framework */,
 				DA94BA651E7675DB00190EF5 /* ImageIO.framework */,
 				DA94BA631E7675D100190EF5 /* GLKit.framework */,
@@ -1733,7 +1781,7 @@
 			path = ../../darwin/src;
 			sourceTree = "<group>";
 		};
-		DABCABA91CB80692000A7C39 /* Benchmarking App */ = {
+		DABCABA91CB80692000A7C39 /* iOS Benchmarking App */ = {
 			isa = PBXGroup;
 			children = (
 				DABCABAD1CB80692000A7C39 /* MBXBenchAppDelegate.h */,
@@ -1748,7 +1796,7 @@
 				DABCABBB1CB80692000A7C39 /* Info.plist */,
 				DABCABAA1CB80692000A7C39 /* Supporting Files */,
 			);
-			name = "Benchmarking App";
+			name = "iOS Benchmarking App";
 			path = benchmark;
 			sourceTree = "<group>";
 		};
@@ -1911,6 +1959,30 @@
 				9620BB371E69FE1700705A1D /* MGLSDKUpdateChecker.mm */,
 			);
 			name = Telemetry;
+			sourceTree = "<group>";
+		};
+		DAE9076F1E76AF3400E58785 /* tvOS App */ = {
+			isa = PBXGroup;
+			children = (
+				DAE907731E76AF3400E58785 /* AppDelegate.h */,
+				DAE907741E76AF3400E58785 /* AppDelegate.m */,
+				DAE907761E76AF3400E58785 /* ViewController.h */,
+				DAE907771E76AF3400E58785 /* ViewController.m */,
+				DAE907791E76AF3400E58785 /* Main.storyboard */,
+				DAE9077C1E76AF3400E58785 /* Assets.xcassets */,
+				DAE9077E1E76AF3400E58785 /* Info.plist */,
+				DAE907701E76AF3400E58785 /* Supporting Files */,
+			);
+			name = "tvOS App";
+			path = tvosapp;
+			sourceTree = "<group>";
+		};
+		DAE907701E76AF3400E58785 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				DAE907711E76AF3400E58785 /* main.m */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -2435,6 +2507,25 @@
 			productReference = DABCABA81CB80692000A7C39 /* Bench GL.app */;
 			productType = "com.apple.product-type.application";
 		};
+		DAE9076D1E76AF3400E58785 /* tvosapp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DAE9078A1E76AF3400E58785 /* Build configuration list for PBXNativeTarget "tvosapp" */;
+			buildPhases = (
+				DAE9076A1E76AF3400E58785 /* Sources */,
+				DAE9076B1E76AF3400E58785 /* Frameworks */,
+				DAE9076C1E76AF3400E58785 /* Resources */,
+				DAE907941E76AFF200E58785 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DAE907931E76AFF200E58785 /* PBXTargetDependency */,
+			);
+			name = tvosapp;
+			productName = tvosapp;
+			productReference = DAE9076E1E76AF3400E58785 /* Mapbox GL.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -2465,6 +2556,7 @@
 					};
 					DA94B9701E766E6400190EF5 = {
 						CreatedOnToolsVersion = 8.3;
+						DevelopmentTeam = GJZR2MEM28;
 						ProvisioningStyle = Automatic;
 					};
 					DA94B9781E766E6400190EF5 = {
@@ -2476,6 +2568,11 @@
 					};
 					DABCABA71CB80692000A7C39 = {
 						CreatedOnToolsVersion = 7.3;
+					};
+					DAE9076D1E76AF3400E58785 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = GJZR2MEM28;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -2517,6 +2614,7 @@
 				DA2E88501CC036F400F24E7B /* test */,
 				DA94B9701E766E6400190EF5 /* tv */,
 				DA94B9781E766E6400190EF5 /* tvtest */,
+				DAE9076D1E76AF3400E58785 /* tvosapp */,
 			);
 		};
 /* End PBXProject section */
@@ -2628,6 +2726,15 @@
 				DA8963381CC549A100684375 /* sprites in Resources */,
 				DABCABB71CB80692000A7C39 /* Assets.xcassets in Resources */,
 				DA8963371CC549A100684375 /* glyphs in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DAE9076C1E76AF3400E58785 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAE9077D1E76AF3400E58785 /* Assets.xcassets in Resources */,
+				DAE9077B1E76AF3400E58785 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2995,6 +3102,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DAE9076A1E76AF3400E58785 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAE907781E76AF3400E58785 /* ViewController.m in Sources */,
+				DAE907751E76AF3400E58785 /* AppDelegate.m in Sources */,
+				DAE907721E76AF3400E58785 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -3032,6 +3149,11 @@
 			isa = PBXTargetDependency;
 			target = DA8847D11CBAF91600AB86E3 /* dynamic */;
 			targetProxy = DAA4E40A1CBB6C9500178DFB /* PBXContainerItemProxy */;
+		};
+		DAE907931E76AFF200E58785 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA94B9701E766E6400190EF5 /* tv */;
+			targetProxy = DAE907921E76AFF200E58785 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -3162,6 +3284,14 @@
 				DA57D4AC1EBA922A00793288 /* vi */,
 			);
 			name = Localizable.stringsdict;
+			sourceTree = "<group>";
+		};
+		DAE907791E76AF3400E58785 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DAE9077A1E76AF3400E58785 /* Base */,
+			);
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -3473,6 +3603,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = GJZR2MEM28;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -3514,6 +3645,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = GJZR2MEM28;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
