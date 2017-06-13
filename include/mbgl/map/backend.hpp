@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mbgl/map/map_observer.hpp>
+#include <mbgl/map/view.hpp>
 #include <mbgl/util/image.hpp>
 #include <mbgl/util/size.hpp>
 
@@ -17,7 +17,7 @@ using FramebufferID = uint32_t;
 
 class BackendScope;
 
-class Backend : public MapObserver {
+class Backend {
 public:
     Backend();
     virtual ~Backend();
@@ -27,10 +27,6 @@ public:
 
     // Called prior to rendering to update the internally assumed OpenGL state.
     virtual void updateAssumedState() = 0;
-
-    // Called when the map needs to be rendered; the backend should call Map::render() at some point
-    // in the near future. (Not called for Map::renderStill() mode.)
-    virtual void invalidate() = 0;
 
 protected:
     // Called with the name of an OpenGL extension that should be loaded. Backend implementations

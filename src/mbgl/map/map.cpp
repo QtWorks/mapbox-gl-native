@@ -11,12 +11,17 @@
 #include <mbgl/renderer/update_parameters.hpp>
 #include <mbgl/renderer/painter.hpp>
 #include <mbgl/renderer/render_source.hpp>
-#include <mbgl/renderer/render_style.hpp>
-#include <mbgl/renderer/render_style_observer.hpp>
+#include <mbgl/renderer/renderer.hpp>
+#include <mbgl/renderer/renderer_frontend.hpp>
+#include <mbgl/renderer/renderer_observer.hpp>
+//TODO: extract parameters in separate headers and get rid of this include
+#include <mbgl/renderer/renderer_impl.hpp>
+#include <mbgl/storage/file_source.hpp>
+#include <mbgl/storage/resource.hpp>
+#include <mbgl/storage/response.hpp>
 #include <mbgl/util/exception.hpp>
 #include <mbgl/util/math.hpp>
 #include <mbgl/util/exception.hpp>
-#include <mbgl/util/async_task.hpp>
 #include <mbgl/util/mapbox.hpp>
 #include <mbgl/util/tile_coordinate.hpp>
 #include <mbgl/actor/scheduler.hpp>
@@ -28,26 +33,20 @@ namespace mbgl {
 
 using namespace style;
 
-enum class RenderState : uint8_t {
-    Never,
-    Partial,
-    Fully,
-};
-
 struct StillImageRequest {
-    StillImageRequest(View& view_, Map::StillImageCallback&& callback_)
-        : view(view_), callback(std::move(callback_)) {
+    StillImageRequest(Map::StillImageCallback&& callback_)
+        : callback(std::move(callback_)) {
     }
 
-    View& view;
     Map::StillImageCallback callback;
 };
 
 class Map::Impl : public style::Observer,
-                  public RenderStyleObserver {
+                  public RendererObserver {
 public:
     Impl(Map&,
-         Backend&,
+         std::unique_ptr<RendererFrontend>,
+         MapObserver&,
          float pixelRatio,
          FileSource&,
          Scheduler&,
@@ -57,24 +56,29 @@ public:
          ViewportMode,
          optional<std::string> programCacheDir);
 
+    ~Impl();
+
+    // StyleObserver
     void onSourceChanged(style::Source&) override;
     void onUpdate(Update) override;
-    void onInvalidate() override;
     void onStyleLoading() override;
     void onStyleLoaded() override;
     void onStyleError(std::exception_ptr) override;
-    void onResourceError(std::exception_ptr) override;
 
-    void render(View&);
-    void renderStill();
+    // RendererObserver
+    void onInvalidate() override;
+    void onResourceError(std::exception_ptr) override;
+    void onWillStartRenderingFrame() override;
+    void onDidFinishRenderingFrame(RenderMode, bool) override;
+    void onWillStartRenderingMap() override;
+    void onDidFinishRenderingMap() override;
 
     Map& map;
     MapObserver& observer;
-    Backend& backend;
+    std::unique_ptr<RendererFrontend> rendererFrontend;
     FileSource& fileSource;
     Scheduler& scheduler;
 
-    RenderState renderState = RenderState::Never;
     Transform transform;
 
     const MapMode mode;
@@ -84,22 +88,16 @@ public:
 
     MapDebugOptions debugOptions { MapDebugOptions::NoDebug };
 
-    Update updateFlags = Update::Nothing;
-
-    std::unique_ptr<Painter> painter;
     std::unique_ptr<Style> style;
-    std::unique_ptr<RenderStyle> renderStyle;
-
     AnnotationManager annotationManager;
 
     bool cameraMutated = false;
     bool loading = false;
-
-    util::AsyncTask asyncInvalidate;
     std::unique_ptr<StillImageRequest> stillImageRequest;
 };
 
-Map::Map(Backend& backend,
+Map::Map(std::unique_ptr<RendererFrontend> renderBridge,
+         MapObserver& mapObserver,
          const Size size,
          const float pixelRatio,
          FileSource& fileSource,
@@ -110,7 +108,8 @@ Map::Map(Backend& backend,
          ViewportMode viewportMode,
          const optional<std::string>& programCacheDir)
     : impl(std::make_unique<Impl>(*this,
-                                  backend,
+                                  std::move(renderBridge),
+                                  mapObserver,
                                   pixelRatio,
                                   fileSource,
                                   scheduler,
@@ -123,7 +122,8 @@ Map::Map(Backend& backend,
 }
 
 Map::Impl::Impl(Map& map_,
-                Backend& backend_,
+                std::unique_ptr<RendererFrontend> frontend,
+                MapObserver& mapObserver,
                 float pixelRatio_,
                 FileSource& fileSource_,
                 Scheduler& scheduler_,
@@ -133,8 +133,8 @@ Map::Impl::Impl(Map& map_,
                 ViewportMode viewportMode_,
                 optional<std::string> programCacheDir_)
     : map(map_),
-      observer(backend_),
-      backend(backend_),
+      observer(mapObserver),
+      rendererFrontend(std::move(frontend)),
       fileSource(fileSource_),
       scheduler(scheduler_),
       transform(observer,
@@ -145,27 +145,25 @@ Map::Impl::Impl(Map& map_,
       pixelRatio(pixelRatio_),
       programCacheDir(std::move(programCacheDir_)),
       style(std::make_unique<Style>(scheduler, fileSource, pixelRatio)),
-      annotationManager(*style),
-      asyncInvalidate([this] {
-          if (mode == MapMode::Continuous) {
-              backend.invalidate();
-          } else {
-              renderStill();
-          }
-      }) {
+      annotationManager(*style) {
+
     style->impl->setObserver(this);
+
+    rendererFrontend->setRenderer(
+            std::make_unique<Renderer>(pixelRatio, scheduler, fileSource, mode,contextMode, programCacheDir),
+            *this
+    );
 }
 
-Map::~Map() {
-    BackendScope guard(impl->backend);
+Map::Impl::~Impl() {
+    // Explicitly delete the render frontend first to ensure it releases
+    // All shared resources (AnnotationManager)
+    rendererFrontend.reset();
+};
 
-    // Explicit resets currently necessary because these abandon resources that need to be
-    // cleaned up by context.reset();
-    impl->renderStyle.reset();
-    impl->painter.reset();
-}
+Map::~Map() = default;
 
-void Map::renderStill(View& view, StillImageCallback callback) {
+void Map::renderStill(StillImageCallback callback) {
     if (!callback) {
         Log::Error(Event::General, "StillImageCallback not set");
         return;
@@ -186,126 +184,53 @@ void Map::renderStill(View& view, StillImageCallback callback) {
         return;
     }
 
-    impl->stillImageRequest = std::make_unique<StillImageRequest>(view, std::move(callback));
+    impl->stillImageRequest = std::make_unique<StillImageRequest>(std::move(callback));
+
     impl->onUpdate(Update::Repaint);
 }
 
-void Map::Impl::renderStill() {
-    if (!stillImageRequest) {
-        return;
-    }
-
-    // TODO: determine whether we need activate/deactivate
-    BackendScope guard(backend);
-    render(stillImageRequest->view);
-}
-
 void Map::triggerRepaint() {
-    impl->backend.invalidate();
+    // TODO: check updates to custom layer
+    //impl->backend->invalidate();
+    impl->onUpdate(Update::Repaint);
 }
 
-void Map::render(View& view) {
-    impl->render(view);
-}
+#pragma mark - Map::Impl RendererObserver
 
-void Map::Impl::render(View& view) {
-    TimePoint timePoint = Clock::now();
-
-    transform.updateTransitions(timePoint);
-
-    if (updateFlags & Update::AnnotationData) {
-        annotationManager.updateData();
-    }
-
-    updateFlags = Update::Nothing;
-
-    gl::Context& context = backend.getContext();
-    if (!painter) {
-        renderStyle = std::make_unique<RenderStyle>(scheduler, fileSource);
-        renderStyle->setObserver(this);
-        painter = std::make_unique<Painter>(context, transform.getState(), pixelRatio, programCacheDir);
-    }
-
-    renderStyle->update({
-        mode,
-        pixelRatio,
-        debugOptions,
-        timePoint,
-        transform.getState(),
-        style->impl->getGlyphURL(),
-        style->impl->spriteLoaded,
-        style->impl->getTransitionOptions(),
-        style->impl->getLight()->impl,
-        style->impl->getImageImpls(),
-        style->impl->getSourceImpls(),
-        style->impl->getLayerImpls(),
-        scheduler,
-        fileSource,
-        annotationManager
-    });
-
-    bool loaded = style->impl->isLoaded() && renderStyle->isLoaded();
-
+void Map::Impl::onWillStartRenderingMap() {
     if (mode == MapMode::Continuous) {
-        if (renderState == RenderState::Never) {
-            observer.onWillStartRenderingMap();
-        }
+        observer.onWillStartRenderingMap();
+    }
+}
 
+void Map::Impl::onWillStartRenderingFrame() {
+    if (mode == MapMode::Continuous) {
         observer.onWillStartRenderingFrame();
+    }
+}
 
-        FrameData frameData { timePoint,
-                              pixelRatio,
-                              mode,
-                              contextMode,
-                              debugOptions };
+void Map::Impl::onDidFinishRenderingFrame(RenderMode mode_, bool needsRepaint) {
+    if (mode == MapMode::Continuous) {
+        observer.onDidFinishRenderingFrame(MapObserver::RenderMode(mode_));
 
-        backend.updateAssumedState();
-
-        painter->render(*renderStyle,
-                        frameData,
-                        view);
-
-        painter->cleanup();
-
-        observer.onDidFinishRenderingFrame(loaded
-            ? MapObserver::RenderMode::Full
-            : MapObserver::RenderMode::Partial);
-
-        if (!loaded) {
-            renderState = RenderState::Partial;
-        } else if (renderState != RenderState::Fully) {
-            renderState = RenderState::Fully;
-            observer.onDidFinishRenderingMap(MapObserver::RenderMode::Full);
-            if (loading) {
-                loading = false;
-                observer.onDidFinishLoadingMap();
-            }
-        }
-
-        // Schedule an update if we need to paint another frame due to transitions or
-        // animations that are still in progress
-        if (renderStyle->hasTransitions() || painter->needsAnimation() || transform.inTransition()) {
+        if (needsRepaint || transform.inTransition()) {
             onUpdate(Update::Repaint);
         }
-    } else if (stillImageRequest && loaded) {
-        FrameData frameData { timePoint,
-                              pixelRatio,
-                              mode,
-                              contextMode,
-                              debugOptions };
-
-        backend.updateAssumedState();
-
-        painter->render(*renderStyle,
-                        frameData,
-                        view);
-
-        auto request = std::move(stillImageRequest);
-        request->callback(nullptr);
-
-        painter->cleanup();
     }
 }
+
+void Map::Impl::onDidFinishRenderingMap() {
+    if (mode == MapMode::Continuous && loading) {
+        observer.onDidFinishRenderingMap(MapObserver::RenderMode::Full);
+        if (loading) {
+            loading = false;
+            observer.onDidFinishLoadingMap();
+        }
+    } else if(stillImageRequest) {
+        auto request = std::move(stillImageRequest);
+        request->callback(nullptr);
+    }
+};
 
 #pragma mark - Style
 
@@ -727,38 +652,33 @@ void Map::removeAnnotation(AnnotationID annotation) {
 #pragma mark - Feature query api
 
 std::vector<Feature> Map::queryRenderedFeatures(const ScreenCoordinate& point, const RenderedQueryOptions& options) {
-    if (!impl->renderStyle) return {};
-
-    return impl->renderStyle->queryRenderedFeatures(
-        { point },
-        impl->transform.getState(),
-        options
-    );
+    RenderedQueryParameters params {
+            { point },
+            impl->transform.getState(),
+            options
+    };
+    return impl->rendererFrontend->queryRenderedFeatures(std::make_unique<RenderedQueryParameters>(std::move(params)));
 }
 
 std::vector<Feature> Map::queryRenderedFeatures(const ScreenBox& box, const RenderedQueryOptions& options) {
-    if (!impl->renderStyle) return {};
-
-    return impl->renderStyle->queryRenderedFeatures(
-        {
-            box.min,
-            { box.max.x, box.min.y },
-            box.max,
-            { box.min.x, box.max.y },
-            box.min
-        },
-        impl->transform.getState(),
-        options
-    );
+    RenderedQueryParameters params {
+            {
+                box.min,
+                {box.max.x, box.min.y},
+                box.max,
+                {box.min.x, box.max.y},
+                box.min
+            },
+            impl->transform.getState(),
+            options
+    };
+    return impl->rendererFrontend->queryRenderedFeatures(
+            std::make_unique<RenderedQueryParameters>(std::move(params)));
 }
 
 std::vector<Feature> Map::querySourceFeatures(const std::string& sourceID, const SourceQueryOptions& options) {
-    if (!impl->renderStyle) return {};
-
-    const RenderSource* source = impl->renderStyle->getRenderSource(sourceID);
-    if (!source) return {};
-
-    return source->querySourceFeatures(options);
+    SourceQueryParameters params {sourceID, options};
+    return impl->rendererFrontend->querySourceFeatures(std::make_unique<SourceQueryParameters>(std::move(params)));
 }
 
 AnnotationIDs Map::queryPointAnnotations(const ScreenBox& box) {
@@ -814,31 +734,53 @@ MapDebugOptions Map::getDebug() const {
 }
 
 bool Map::isFullyLoaded() const {
-    return impl->style->impl->isLoaded() && impl->renderStyle && impl->renderStyle->isLoaded();
+    return impl->style->impl->isLoaded(); //TODO && impl->renderStyle && impl->renderStyle->isLoaded();
 }
 
 void Map::onLowMemory() {
-    if (impl->painter) {
-        BackendScope guard(impl->backend);
-        impl->painter->cleanup();
-    }
-    if (impl->renderStyle) {
-        impl->renderStyle->onLowMemory();
-        impl->backend.invalidate();
-    }
+    impl->rendererFrontend->onLowMemory();
 }
 
 void Map::Impl::onSourceChanged(style::Source& source) {
     observer.onSourceChanged(source);
 }
 
-void Map::Impl::onUpdate(Update flags) {
-    updateFlags |= flags;
-    asyncInvalidate.send();
-}
-
 void Map::Impl::onInvalidate() {
     onUpdate(Update::Repaint);
+}
+
+void Map::Impl::onUpdate(Update flags) {
+    TimePoint timePoint = Clock::now();
+
+    transform.updateTransitions(timePoint);
+
+    // TODO: move this somewhere else if we don't
+    // coalesce here?
+    if (flags & Update::AnnotationData) {
+        annotationManager.updateData();
+    }
+
+    UpdateParameters params = {
+            style->impl->isLoaded(),
+            flags,
+            mode,
+            pixelRatio,
+            debugOptions,
+            timePoint,
+            transform.getState(),
+            style->impl->getGlyphURL(),
+            style->impl->spriteLoaded,
+            style->impl->getTransitionOptions(),
+            style->impl->getLight()->impl,
+            style->impl->getImageImpls(),
+            style->impl->getSourceImpls(),
+            style->impl->getLayerImpls(),
+            scheduler,
+            fileSource,
+            annotationManager
+    };
+
+    rendererFrontend->update(std::make_shared<UpdateParameters>(std::move(params)));
 }
 
 void Map::Impl::onStyleLoading() {
@@ -873,9 +815,7 @@ void Map::Impl::onResourceError(std::exception_ptr error) {
 void Map::dumpDebugLogs() const {
     Log::Info(Event::General, "--------------------------------------------------------------------------------");
     impl->style->impl->dumpDebugLogs();
-    if (impl->renderStyle) {
-        impl->renderStyle->dumpDebugLogs();
-    }
+    impl->rendererFrontend->dumpDebugLogs();
     Log::Info(Event::General, "--------------------------------------------------------------------------------");
 }
 

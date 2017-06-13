@@ -6,6 +6,7 @@
 #include <mbgl/map/backend_scope.hpp>
 #include <mbgl/gl/headless_backend.hpp>
 #include <mbgl/gl/offscreen_view.hpp>
+#include <mbgl/test/stub_renderer_frontend.hpp>
 #include <mbgl/storage/online_file_source.hpp>
 #include <mbgl/util/default_thread_pool.hpp>
 #include <mbgl/util/exception.hpp>
@@ -28,9 +29,10 @@ TEST(API, RenderWithoutCallback) {
     StubFileSource fileSource;
     ThreadPool threadPool(4);
 
-    std::unique_ptr<Map> map =
-        std::make_unique<Map>(backend, view.getSize(), 1, fileSource, threadPool, MapMode::Still);
-    map->renderStill(view, nullptr);
+    std::unique_ptr<Map> map = std::make_unique<Map>(
+            std::make_unique<StubRendererFrontend>(backend, view), MapObserver::nullObserver(),
+            view.getSize(), 1, fileSource, threadPool, MapMode::Still);
+    map->renderStill(nullptr);
 
     // Force Map thread to join.
     map.reset();

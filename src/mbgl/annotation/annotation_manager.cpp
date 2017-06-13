@@ -209,14 +209,14 @@ void AnnotationManager::addImage(std::unique_ptr<style::Image> image) {
     images.erase(id);
     auto inserted = images.emplace(id, style::Image(id, image->getImage().clone(),
                                                     image->getPixelRatio(), image->isSdf()));
-    style.addImage(std::make_unique<style::Image>(inserted.first->second));
+    style.impl->addImage(std::make_unique<style::Image>(inserted.first->second));
 }
 
 void AnnotationManager::removeImage(const std::string& id_) {
     std::lock_guard<std::mutex> lock(mutex);
     const std::string id = prefixedImageID(id_);
     images.erase(id);
-    style.removeImage(id);
+    style.impl->removeImage(id);
 }
 
 double AnnotationManager::getTopOffsetPixelsForImage(const std::string& id_) {

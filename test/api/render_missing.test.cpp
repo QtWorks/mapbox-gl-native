@@ -11,8 +11,10 @@
 #include <mbgl/util/io.hpp>
 #include <mbgl/util/run_loop.hpp>
 #include <mbgl/style/style.hpp>
+#include <mbgl/test/stub_renderer_frontend.hpp>
 
 #include <future>
+#include <memory>
 
 #if TEST_HAS_SERVER
 #define TEST_REQUIRES_SERVER(name) name
@@ -35,14 +37,15 @@ TEST(API, TEST_REQUIRES_SERVER(RenderMissingTile)) {
 
     Log::setObserver(std::make_unique<FixtureLogObserver>());
 
-    Map map(backend, view.getSize(), 1, fileSource, threadPool, MapMode::Still);
+    Map map(std::make_unique<StubRendererFrontend>(backend, view), MapObserver::nullObserver(),
+            view.getSize(), 1, fileSource, threadPool, MapMode::Still);
 
     std::string message;
 
     // This host does not respond (== connection error).
     // Are you seeing this test fail? Make sure you don't have a server running on port 3001!
     map.getStyle().loadJSON(style);
-    map.renderStill(view, [&](std::exception_ptr err) {
+    map.renderStill([&](std::exception_ptr err) {
         ASSERT_TRUE(err.operator bool());
         try {
             std::rethrow_exception(err);

@@ -10,6 +10,7 @@
 #include <mbgl/util/io.hpp>
 #include <mbgl/util/run_loop.hpp>
 #include <mbgl/style/style.hpp>
+#include <mbgl/test/stub_renderer_frontend.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -38,7 +39,7 @@ public:
     util::RunLoop runLoop;
     HeadlessBackend backend { test::sharedDisplay() };
     BackendScope scope { backend };
-    OffscreenView view{ backend.getContext(), { 512, 512 } };
+    OffscreenView view { backend.getContext(), { 512, 512 } };
     StubFileSource fileSource;
     ThreadPool threadPool { 4 };
 
@@ -74,7 +75,9 @@ private:
 TEST(Memory, Vector) {
     MemoryTest test;
 
-    Map map(test.backend, { 256, 256 }, 2, test.fileSource, test.threadPool, MapMode::Still);
+    Map map(std::make_unique<StubRendererFrontend>(test.backend, test.view),
+            MapObserver::nullObserver(), {256, 256}, 2, test.fileSource, test.threadPool,
+            MapMode::Still);
     map.setZoom(16); // more map features
     map.getStyle().loadURL("mapbox://streets");
 
@@ -84,7 +87,9 @@ TEST(Memory, Vector) {
 TEST(Memory, Raster) {
     MemoryTest test;
 
-    Map map(test.backend, { 256, 256 }, 2, test.fileSource, test.threadPool, MapMode::Still);
+    Map map(std::make_unique<StubRendererFrontend>(test.backend, test.view),
+            MapObserver::nullObserver(), {256, 256}, 2, test.fileSource, test.threadPool,
+            MapMode::Still);
     map.getStyle().loadURL("mapbox://satellite");
 
     test::render(map, test.view);
@@ -125,7 +130,9 @@ TEST(Memory, Footprint) {
 
     // Warm up buffers and cache.
     for (unsigned i = 0; i < 10; ++i) {
-        Map map(test.backend, { 256, 256 }, 2, test.fileSource, test.threadPool, MapMode::Still);
+        Map map(std::make_unique<StubRendererFrontend>(test.backend, test.view),
+                MapObserver::nullObserver(), {256, 256}, 2, test.fileSource, test.threadPool,
+                MapMode::Still);
         renderMap(map, "mapbox://streets");
         renderMap(map, "mapbox://satellite");
     };
@@ -139,8 +146,10 @@ TEST(Memory, Footprint) {
 
     long vectorInitialRSS = mbgl::test::getCurrentRSS();
     for (unsigned i = 0; i < runs; ++i) {
-        auto vector = std::make_unique<Map>(test.backend, Size{ 256, 256 }, 2, test.fileSource,
-                                            test.threadPool, MapMode::Still);
+        auto vector = std::make_unique<Map>(
+                std::make_unique<StubRendererFrontend>(test.backend, test.view),
+                MapObserver::nullObserver(), Size{256, 256}, 2, test.fileSource, test.threadPool,
+                MapMode::Still);
         renderMap(*vector, "mapbox://streets");
         maps.push_back(std::move(vector));
     };
@@ -149,8 +158,10 @@ TEST(Memory, Footprint) {
 
     long rasterInitialRSS = mbgl::test::getCurrentRSS();
     for (unsigned i = 0; i < runs; ++i) {
-        auto raster = std::make_unique<Map>(test.backend, Size{ 256, 256 }, 2, test.fileSource,
-                                            test.threadPool, MapMode::Still);
+        auto raster = std::make_unique<Map>(
+                std::make_unique<StubRendererFrontend>(test.backend, test.view),
+                MapObserver::nullObserver(), Size{256, 256}, 2, test.fileSource, test.threadPool,
+                MapMode::Still);
         renderMap(*raster, "mapbox://satellite");
         maps.push_back(std::move(raster));
     };

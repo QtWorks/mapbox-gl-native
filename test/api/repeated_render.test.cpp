@@ -11,6 +11,7 @@
 #include <mbgl/util/io.hpp>
 #include <mbgl/util/run_loop.hpp>
 #include <mbgl/style/style.hpp>
+#include <mbgl/test/stub_renderer_frontend.hpp>
 
 #include <future>
 
@@ -31,12 +32,12 @@ TEST(API, RepeatedRender) {
 
     Log::setObserver(std::make_unique<FixtureLogObserver>());
 
-    Map map(backend, view.getSize(), 1, fileSource, threadPool, MapMode::Still);
+    Map map(std::make_unique<StubRendererFrontend>(backend, view), MapObserver::nullObserver(), view.getSize(), 1, fileSource, threadPool, MapMode::Still);
 
     {
         map.getStyle().loadJSON(style);
         PremultipliedImage result;
-        map.renderStill(view, [&](std::exception_ptr) {
+        map.renderStill([&](std::exception_ptr) {
             result = view.readStillImage();
         });
 
@@ -54,7 +55,7 @@ TEST(API, RepeatedRender) {
     {
         map.getStyle().loadJSON(style);
         PremultipliedImage result;
-        map.renderStill(view, [&](std::exception_ptr) {
+        map.renderStill([&](std::exception_ptr) {
             result = view.readStillImage();
         });
 

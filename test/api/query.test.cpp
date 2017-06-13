@@ -11,6 +11,7 @@
 #include <mbgl/style/style.hpp>
 #include <mbgl/style/image.hpp>
 #include <mbgl/style/source.hpp>
+#include <mbgl/test/stub_renderer_frontend.hpp>
 
 using namespace mbgl;
 using namespace mbgl::style;
@@ -33,7 +34,7 @@ public:
     OffscreenView view { backend.getContext() };
     StubFileSource fileSource;
     ThreadPool threadPool { 4 };
-    Map map { backend, view.getSize(), 1, fileSource, threadPool, MapMode::Still };
+    Map map { std::make_unique<StubRendererFrontend>(backend, view), MapObserver::nullObserver(), view.getSize(), 1, fileSource, threadPool, MapMode::Still };
 };
 
 } // end namespace

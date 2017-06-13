@@ -44,8 +44,4 @@ void HeadlessBackend::updateAssumedState() {
     // no-op
 }
 
-void HeadlessBackend::invalidate() {
-    assert(false);
-}
-
 } // namespace mbgl

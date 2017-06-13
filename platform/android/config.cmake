@@ -56,6 +56,8 @@ macro(mbgl_platform_core)
         PRIVATE platform/default/string_stdlib.cpp
         PRIVATE platform/default/bidi.cpp
         PRIVATE platform/default/utf.cpp
+        PRIVATE platform/default/mbgl/renderer/default_render_bridge.cpp
+        PRIVATE platform/default/mbgl/renderer/default_render_bridge.hpp
 
         # Image handling
         PRIVATE platform/default/png_writer.cpp

@@ -157,6 +157,8 @@ set(MBGL_CORE_FILES
     src/mbgl/programs/uniforms.hpp
 
     # renderer
+    include/mbgl/renderer/renderer.hpp
+    include/mbgl/renderer/renderer_frontend.hpp
     src/mbgl/renderer/bucket.hpp
     src/mbgl/renderer/bucket_parameters.cpp
     src/mbgl/renderer/bucket_parameters.hpp
@@ -193,6 +195,10 @@ set(MBGL_CORE_FILES
     src/mbgl/renderer/render_style_observer.hpp
     src/mbgl/renderer/render_tile.cpp
     src/mbgl/renderer/render_tile.hpp
+    src/mbgl/renderer/renderer.cpp
+    src/mbgl/renderer/renderer_impl.cpp
+    src/mbgl/renderer/renderer_impl.hpp
+    src/mbgl/renderer/renderer_observer.hpp
     src/mbgl/renderer/style_diff.cpp
     src/mbgl/renderer/style_diff.hpp
     src/mbgl/renderer/tile_parameters.hpp

@@ -24,6 +24,7 @@ class Backend;
 class View;
 class FileSource;
 class Scheduler;
+class RendererFrontend;
 
 namespace style {
 class Image;
@@ -32,7 +33,8 @@ class Style;
 
 class Map : private util::noncopyable {
 public:
-    explicit Map(Backend&,
+    explicit Map(std::unique_ptr<RendererFrontend>,
+                 MapObserver& mapObserver,
                  Size size,
                  float pixelRatio,
                  FileSource&,
@@ -47,13 +49,11 @@ public:
     // Register a callback that will get called (on the render thread) when all resources have
     // been loaded and a complete render occurs.
     using StillImageCallback = std::function<void (std::exception_ptr)>;
-    void renderStill(View&, StillImageCallback callback);
+    void renderStill(StillImageCallback callback);
 
     // Triggers a repaint.
+    // TODO; can we get rid of this?
     void triggerRepaint();
-
-    // Main render function.
-    void render(View&);
 
           style::Style& getStyle();
     const style::Style& getStyle() const;
