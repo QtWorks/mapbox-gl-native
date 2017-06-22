@@ -47,7 +47,8 @@ public:
     Transform transform;
     TransformState transformState;
     ThreadPool threadPool { 1 };
-    AnnotationManager annotationManager;
+    Style style { loop, fileSource, 1 };
+    AnnotationManager annotationManager { style };
     ImageManager imageManager;
     GlyphManager glyphManager { fileSource };
 

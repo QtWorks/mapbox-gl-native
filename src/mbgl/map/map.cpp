@@ -86,10 +86,11 @@ public:
 
     Update updateFlags = Update::Nothing;
 
-    AnnotationManager annotationManager;
     std::unique_ptr<Painter> painter;
     std::unique_ptr<Style> style;
     std::unique_ptr<RenderStyle> renderStyle;
+
+    AnnotationManager annotationManager;
 
     bool cameraMutated = false;
     bool loading = false;
@@ -143,6 +144,8 @@ Map::Impl::Impl(Map& map_,
       contextMode(contextMode_),
       pixelRatio(pixelRatio_),
       programCacheDir(std::move(programCacheDir_)),
+      style(std::make_unique<Style>(scheduler, fileSource, pixelRatio)),
+      annotationManager(*style),
       asyncInvalidate([this] {
           if (mode == MapMode::Continuous) {
               backend.invalidate();
@@ -150,7 +153,6 @@ Map::Impl::Impl(Map& map_,
               renderStill();
           }
       }) {
-    style = std::make_unique<Style>(scheduler, fileSource, pixelRatio);
     style->impl->setObserver(this);
 }
 
@@ -210,10 +212,6 @@ void Map::Impl::render(View& view) {
     TimePoint timePoint = Clock::now();
 
     transform.updateTransitions(timePoint);
-
-    if (style->impl->loaded && updateFlags & Update::AnnotationStyle) {
-        annotationManager.updateStyle(*style->impl);
-    }
 
     if (updateFlags & Update::AnnotationData) {
         annotationManager.updateData();
@@ -701,12 +699,10 @@ LatLng Map::latLngForPixel(const ScreenCoordinate& pixel) const {
 
 void Map::addAnnotationImage(std::unique_ptr<style::Image> image) {
     impl->annotationManager.addImage(std::move(image));
-    impl->onUpdate(Update::AnnotationStyle);
 }
 
 void Map::removeAnnotationImage(const std::string& id) {
     impl->annotationManager.removeImage(id);
-    impl->onUpdate(Update::AnnotationStyle);
 }
 
 double Map::getTopOffsetPixelsForAnnotationImage(const std::string& id) {
@@ -715,7 +711,7 @@ double Map::getTopOffsetPixelsForAnnotationImage(const std::string& id) {
 
 AnnotationID Map::addAnnotation(const Annotation& annotation) {
     auto result = impl->annotationManager.addAnnotation(annotation, getMaxZoom());
-    impl->onUpdate(Update::AnnotationStyle | Update::AnnotationData);
+    impl->onUpdate(Update::AnnotationData);
     return result;
 }
 
@@ -725,7 +721,7 @@ void Map::updateAnnotation(AnnotationID id, const Annotation& annotation) {
 
 void Map::removeAnnotation(AnnotationID annotation) {
     impl->annotationManager.removeAnnotation(annotation);
-    impl->onUpdate(Update::AnnotationStyle | Update::AnnotationData);
+    impl->onUpdate(Update::AnnotationData);
 }
 
 #pragma mark - Feature query api
@@ -859,7 +855,7 @@ void Map::Impl::onStyleLoaded() {
         map.setPitch(style->getDefaultPitch());
     }
 
-    onUpdate(Update::AnnotationStyle);
+    annotationManager.onStyleLoaded();
     observer.onDidFinishLoadingStyle();
 }
 

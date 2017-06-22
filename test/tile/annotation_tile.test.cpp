@@ -27,10 +27,11 @@ public:
     TransformState transformState;
     util::RunLoop loop;
     ThreadPool threadPool { 1 };
-    AnnotationManager annotationManager;
+    style::Style style { loop, fileSource, 1 };
+    AnnotationManager annotationManager { style };
     HeadlessBackend backend { test::sharedDisplay() };
     BackendScope scope { backend };
-    RenderStyle style { threadPool, fileSource };
+    RenderStyle renderStyle { threadPool, fileSource };
     ImageManager imageManager;
     GlyphManager glyphManager { fileSource };
 
@@ -91,7 +92,7 @@ TEST(AnnotationTile, Issue8289) {
     TransformState transformState;
     RenderedQueryOptions options;
 
-    tile.queryRenderedFeatures(result, queryGeometry, transformState, test.style, options);
+    tile.queryRenderedFeatures(result, queryGeometry, transformState, test.renderStyle, options);
 
     EXPECT_TRUE(result.empty());
 }

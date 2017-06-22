@@ -24,7 +24,8 @@ public:
     TransformState transformState;
     util::RunLoop loop;
     ThreadPool threadPool { 1 };
-    AnnotationManager annotationManager;
+    style::Style style { loop, fileSource, 1 };
+    AnnotationManager annotationManager { style };
     ImageManager imageManager;
     GlyphManager glyphManager { fileSource };
     Tileset tileset { { "https://example.com" }, { 0, 22 }, "none" };
