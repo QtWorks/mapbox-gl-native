@@ -15,6 +15,8 @@
 #include <mbgl/util/default_thread_pool.hpp>
 #include <mbgl/storage/default_file_source.hpp>
 #include <mbgl/storage/network_status.hpp>
+#include <mbgl/renderer/renderer.hpp>
+#include <mbgl/renderer/renderer_frontend.hpp>
 #include <mbgl/style/style.hpp>
 #include <mbgl/style/image.hpp>
 #include <mbgl/style/transition_options.hpp>
@@ -73,6 +75,7 @@
 #include <unordered_set>
 
 class MBGLView;
+class MBGLRenderFrontend;;
 class MGLAnnotationContext;
 
 const CGFloat MGLMapViewDecelerationRateNormal = UIScrollViewDecelerationRateNormal;
@@ -273,6 +276,8 @@ public:
 {
     mbgl::Map *_mbglMap;
     MBGLView *_mbglView;
+    MBGLRenderFrontend *_frontend;
+    
     std::shared_ptr<mbgl::ThreadPool> _mbglThreadPool;
 
     BOOL _opaque;
@@ -437,7 +442,9 @@ public:
     mbgl::DefaultFileSource *mbglFileSource = [MGLOfflineStorage sharedOfflineStorage].mbglFileSource;
     const float scaleFactor = [UIScreen instancesRespondToSelector:@selector(nativeScale)] ? [[UIScreen mainScreen] nativeScale] : [[UIScreen mainScreen] scale];
     _mbglThreadPool = mbgl::sharedThreadPool();
-    _mbglMap = new mbgl::Map(*_mbglView, self.size, scaleFactor, *mbglFileSource, *_mbglThreadPool, mbgl::MapMode::Continuous, mbgl::GLContextMode::Unique, mbgl::ConstrainMode::None, mbgl::ViewportMode::Default);
+    std::unique_ptr<MBGLRenderFrontend> frontend = std::make_unique<MBGLRenderFrontend>(self, _mbglView);
+    _frontend = frontend.get();
+    _mbglMap = new mbgl::Map(std::move(frontend), *_mbglView, self.size, scaleFactor, *mbglFileSource, *_mbglThreadPool, mbgl::MapMode::Continuous, mbgl::GLContextMode::Unique, mbgl::ConstrainMode::None, mbgl::ViewportMode::Default);
 
     // start paused if in IB
     if (_isTargetingInterfaceBuilder || background) {
@@ -803,12 +810,9 @@ public:
 // This is the delegate of the GLKView object's display call.
 - (void)glkView:(__unused GLKView *)view drawInRect:(__unused CGRect)rect
 {
-    if ( ! self.dormant)
+    if ( ! self.dormant || ! _frontend)
     {
-        // The OpenGL implementation automatically enables the OpenGL context for us.
-        mbgl::BackendScope scope { *_mbglView, mbgl::BackendScope::ScopeType::Implicit };
-
-        _mbglMap->render(*_mbglView);
+        _frontend->render();
 
         [self updateUserLocationAnnotationView];
     }
@@ -5389,7 +5393,7 @@ public:
     return _annotationViewReuseQueueByIdentifier[identifier];
 }
 
-class MBGLView : public mbgl::View, public mbgl::Backend
+class MBGLView : public mbgl::View, public mbgl::Backend, public mbgl::MapObserver
 {
 public:
     MBGLView(MGLMapView* nativeView_) : nativeView(nativeView_) {
@@ -5501,11 +5505,6 @@ public:
         return reinterpret_cast<mbgl::gl::ProcAddress>(symbol);
     }
 
-    void invalidate() override
-    {
-        [nativeView setNeedsGLDisplay];
-    }
-
     void activate() override
     {
         if (activationCount++)
@@ -5530,6 +5529,69 @@ private:
     __weak MGLMapView *nativeView = nullptr;
 
     NSUInteger activationCount = 0;
+};
+
+class MBGLRenderFrontend : public mbgl::RendererFrontend
+{
+public:
+    MBGLRenderFrontend(MGLMapView* nativeView_, MBGLView* mbglView_)
+            : nativeView(nativeView_)
+            , mbglView(mbglView_) {
+    }
+    
+    ~MBGLRenderFrontend() {
+        // The OpenGL implementation automatically enables the OpenGL context for us.
+        mbgl::BackendScope scope { *mbglView, mbgl::BackendScope::ScopeType::Implicit };
+        
+        // Reset the renderer explicitly
+        renderer.reset();
+    }
+    
+    void update(std::shared_ptr<mbgl::UpdateParameters> updateParameters_) override {
+        updateParameters = std::move(updateParameters_);
+        [nativeView setNeedsGLDisplay];
+    };
+    
+    std::vector<mbgl::Feature> queryRenderedFeatures(std::shared_ptr<mbgl::RenderedQueryParameters> parameters) const override  {
+        if (!renderer)  return {};
+        return renderer->queryRenderedFeatures(*parameters);
+    };
+    
+    std::vector<mbgl::Feature> querySourceFeatures(std::shared_ptr<mbgl::SourceQueryParameters> parameters) const override  {
+        if (!renderer)  return {};
+        return renderer->querySourceFeatures(*parameters);
+        
+    };
+    
+    void setRenderer(std::unique_ptr<mbgl::Renderer> renderer_, mbgl::RendererObserver& observer) override {
+        renderer = std::move(renderer_);
+        renderer->setObserver(&observer);
+    };
+    
+    void render() {
+        if (!renderer || !updateParameters) return;
+        
+        // The OpenGL implementation automatically enables the OpenGL context for us.
+        mbgl::BackendScope scope { *mbglView, mbgl::BackendScope::ScopeType::Implicit };
+        
+        renderer->render(*mbglView, *mbglView, *updateParameters);
+    }
+    
+    void onLowMemory() override {
+        if (!renderer)  return;
+        renderer->onLowMemory();
+    }
+    
+    void dumpDebugLogs() override {
+        if (!renderer)  return;
+        renderer->dumpDebugLogs();
+    }
+    
+private:
+    __weak MGLMapView *nativeView = nullptr;
+    MBGLView *mbglView = nullptr;
+    std::unique_ptr<mbgl::Renderer> renderer;
+    std::shared_ptr<mbgl::UpdateParameters> updateParameters;
 };
 
 @end
