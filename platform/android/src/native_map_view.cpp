@@ -67,8 +67,12 @@ NativeMapView::NativeMapView(jni::JNIEnv& _env,
         return;
     }
 
+    // Create a renderer frontend
+    auto frontend = std::make_unique<SynchronousRendererFrontend>(*this, [this] { this->invalidate() ;});
+    rendererFrontend = frontend.get();
+
     // Create the core map
-    map = std::make_unique<mbgl::Map>(
+    map = std::make_unique<mbgl::Map>(std::move(frontend),
         *this, mbgl::Size{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) },
         pixelRatio, mbgl::android::FileSource::getDefaultFileSource(_env, jFileSource), *threadPool,
         MapMode::Continuous, GLContextMode::Unique, ConstrainMode::HeightOnly,
@@ -280,7 +284,7 @@ void NativeMapView::render(jni::JNIEnv& env) {
         framebufferSizeChanged = false;
     }
 
-    map->render(*this);
+    rendererFrontend->render(*this);
 
     if(snapshot){
          snapshot = false;

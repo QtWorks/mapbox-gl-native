@@ -12,6 +12,7 @@
 #include <mbgl/storage/network_status.hpp>
 
 #include "file_source.hpp"
+#include "synchronous_renderer_frontend.hpp"
 #include "annotation/marker.hpp"
 #include "annotation/polygon.hpp"
 #include "annotation/polyline.hpp"
@@ -25,6 +26,7 @@
 #include "geometry/lat_lng_bounds.hpp"
 #include "map/camera_position.hpp"
 #include "style/light.hpp"
+#include "synchronous_renderer_frontend.hpp"
 
 #include <exception>
 #include <string>
@@ -36,7 +38,7 @@
 namespace mbgl {
 namespace android {
 
-class NativeMapView : public View, public Backend {
+class NativeMapView : public View, public Backend, public MapObserver {
 public:
 
     static constexpr auto Name() { return "com/mapbox/mapboxsdk/maps/NativeMapView"; };
@@ -60,7 +62,6 @@ public:
     // mbgl::Backend //
 
     void updateAssumedState() override;
-    void invalidate() override;
 
     // Deprecated //
     void notifyMapChange(mbgl::MapChange);
@@ -78,6 +79,9 @@ public:
     void onDidFinishRenderingMap(MapObserver::RenderMode) override;
     void onDidFinishLoadingStyle() override;
     void onSourceChanged(mbgl::style::Source&) override;
+
+    // Signal the view system, we want to redraw
+    void invalidate();
 
     // JNI //
 
@@ -288,6 +292,8 @@ private:
     void updateFps();
 
 private:
+    SynchronousRendererFrontend* rendererFrontend;
+
     JavaVM *vm = nullptr;
     jni::UniqueWeakObject<NativeMapView> javaPeer;
 
